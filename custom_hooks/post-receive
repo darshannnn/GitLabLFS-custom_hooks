@@ -1,0 +1,105 @@
+#!/usr/bin/python
+
+# This is a post-receive git server hook that deletes lfs objects from the LFS store when a LFS file is deleted from the associated munki repository
+# On GitLab this has to be located in the custom_hooks directory in the .git repo and has to be executable
+# author: darshan.pradhan@anu.edu.au
+
+import sys
+import fileinput
+import subprocess
+import os
+
+# Path needs to be updated with the lfs_storage_path of the git
+# Config for MOE Test gitlab server
+#LFSStoragePath = '/home/lfs-objects'
+
+# Path for tomes.anu.edu.au
+LFSStoragePath = '/var/opt/lfs-objects'
+
+# LFS Objects extensions to be specified below
+LFSObjectExtensions = ('.iso','.mpkg','.dmg','.pkg','.gz','.tar','.zip','.7z')
+
+
+def git(args):
+    args = ['git'] + args
+    git = subprocess.Popen(args, stdout = subprocess.PIPE)
+    details = git.stdout.read()
+    details = details.decode("utf-8").strip()
+    return details
+
+def gitlab_rails(args):
+    args = ['gitlab-rails'] + args
+    git = subprocess.Popen(args, stdout = subprocess.PIPE)
+    details = git.stdout.read()
+    details = details.decode("utf-8").strip()
+    return details
+
+# Read in each ref that the user is trying to update
+for line in fileinput.input():
+    print "=====================================\npost-receive: Trying to push ref: %s" % line
+
+    commit = line.split( )
+    old = commit[0]
+    new = commit[1]
+    ref = commit[2]
+
+    oidList = []
+
+    changes = git(['diff', '--name-status', old, new]).split('\n')
+    for change in changes:
+        print "Changed files: " + change
+
+        supportedStatus = ('A','D')
+        if not change.startswith(supportedStatus):
+            print "Hook only supports handeling deltetion and adding new files to the repository.\nNo action needed!"
+            exit(0)
+
+        status, file = change.split('\t')
+        print "Status: " + status + " File: " + file
+        # If the files is deleted and is an LFS Object, build the LFS Object path and Delete it
+        if file.endswith(LFSObjectExtensions):
+
+            # If the file has been deleted
+            if status == 'D':
+
+                pkg = git(['show', old+":"+file]).split('\n')
+                oid = pkg[1].split(':')
+                print oid[1]
+                LFSObject = LFSStoragePath + '/' + oid[1][0:2] + '/' + oid[1][2:4] + '/' + oid[1][4:]
+
+                print "Removing the LFS Object: " + LFSObject
+	        
+		# Adding oid to the list which will be sent to the clean.rb script to be removed from the database
+                oidList.append(oid[1])
+
+                # Delete the file and its database record if it's present
+                if os.path.isfile(LFSObject):
+                    
+		    print "object is present, removing file from LFS Store"
+                    os.remove(LFSObject)
+		    
+                else:
+                    print "object is not present \n"
+		    continue
+
+                # Check the file has been removed
+                if os.path.isfile(LFSObject):
+                    print "object is still present!!! \n"
+                else:
+                    print "successfully deleted!! \n"
+
+            # If the file has been Added
+            if status == 'A':
+
+                pkg = git(['show', new+":"+file]).split('\n')
+                oid = pkg[1].split(':')
+                print oid[1]
+                LFSObject = LFSStoragePath + '/' + oid[1][0:2] + '/' + oid[1][2:4] + '/' + oid[1][4:]
+                print "Addind new LFS Object: " + LFSObject + "\n"
+
+    # If the oidList is not empty then run the database cleaning script with hotlab-rails
+    if len(oidList) > 0:
+        print "Calling gitlab-rails to delete records from the database, this could take a while!"
+	scriptPath = os.path.dirname(os.path.abspath(__file__)) + "/cleandb.rb"
+        dbrec = gitlab_rails(['runner', scriptPath] + oidList)
+        print dbrec
