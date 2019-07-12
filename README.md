@@ -1,4 +1,4 @@
-# GitLab custom_hooks for deleting LFS Objects
+# GitLab Server custom_hooks for deleting LFS Objects
 
 Current version of GitLab does not delete LFS objects from LFS storage.
 This custom hook deletes the LFS Objects from storage when a LFS file is deleted and pushed to the git server
@@ -7,7 +7,7 @@ This custom hook deletes the LFS Objects from storage when a LFS file is deleted
 
 Gitlab custom hooks setup is at https://docs.gitlab.com/ee/administration/custom_hooks.html
 
-Quick run through the process:
+Quick run through the process on GitLab server:
 
 * Edit `LFSObjectExtensions` in `post-receive` file to the LFS extensions you are tracking. <br/>Should be the same as the files in your `.gitattributes`
 
