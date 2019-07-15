@@ -11,7 +11,7 @@ Quick run through the process on GitLab server:
 
 * Edit `LFSObjectExtensions` in `post-receive` file to the LFS extensions you are tracking. <br/>Should be the same as the files in your `.gitattributes`
 
-* Edit `LFSStoragePath` in `post-receive` file. This value should match your server value for gitlab_rails['lfs_storage_path'] in /etc/gitlab/gitlab.rb <br/>https://docs.gitlab.com/ee/workflow/lfs/lfs_administration.html
+* Edit `LFSStoragePath` in `post-receive` file. This value should match your server value for `gitlab_rails['lfs_storage_path']` in `/etc/gitlab/gitlab.rb` <br/>https://docs.gitlab.com/ee/workflow/lfs/lfs_administration.html
 
 * Files need to be in the following location (path is for a standard GitLab install)
 
