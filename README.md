@@ -20,6 +20,6 @@ Quick run through the process on GitLab server:
 * Please make git the owner of the directory and the scripts in it should be executable.
 
 ```
-chown -R git:git /var/opt/gitlab/git-data/repositories/<your-username>/munki_repo_lfs.git/custom_hooks
+chown -R git:git /var/opt/gitlab/git-data/repositories/<your-username>/<your_lfs_repo>.git/custom_hooks
 chmod -R +x /var/opt/gitlab/git-data/repositories/<your-username>/munki_repo_lfs.git/custom_hook
 ```
