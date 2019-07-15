@@ -10,10 +10,7 @@ import subprocess
 import os
 
 # Path needs to be updated with the lfs_storage_path of the git
-# Config for MOE Test gitlab server
-#LFSStoragePath = '/home/lfs-objects'
-
-# Path for tomes.anu.edu.au
+# This value should match your servers value for gitlab_rails['lfs_storage_path'] in /etc/gitlab/gitlab.rb
 LFSStoragePath = '/var/opt/lfs-objects'
 
 # LFS Objects extensions to be specified below
@@ -97,7 +94,7 @@ for line in fileinput.input():
                 LFSObject = LFSStoragePath + '/' + oid[1][0:2] + '/' + oid[1][2:4] + '/' + oid[1][4:]
                 print "Addind new LFS Object: " + LFSObject + "\n"
 
-    # If the oidList is not empty then run the database cleaning script with hotlab-rails
+    # If the oidList is not empty then run the database cleaning script with gitlab-rails
     if len(oidList) > 0:
         print "Calling gitlab-rails to delete records from the database, this could take a while!"
 	scriptPath = os.path.dirname(os.path.abspath(__file__)) + "/cleandb.rb"
